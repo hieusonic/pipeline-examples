@@ -1,0 +1,117 @@
+Mục tiêu của tài liệu
+
+Tài liệu này là tập hợp các mẹo, lưu ý và best practices khi dùng Jenkins Pipeline:
+
+Giúp viết pipeline dễ đọc, dễ debug, dễ bảo trì.
+
+Tránh những bẫy Groovy, lỗi script security, lỗi concurrency.
+
+Áp dụng tốt trong các dự án đa nhánh, đa team.
+
+2️⃣ General tips and advice (Các lời khuyên chung)
+
+Làm tất cả công việc thật sự trong node block
+
+Ví dụ: chạy shell script, build, test, deploy.
+
+Lý do: chỉ node block mới chạy trên executor thật, còn ngoài node block thì chạy trên master flyweight executor → không có tài nguyên thật.
+
+Lấy flow từ source control (SCM)
+
+Như Multibranch pipeline, hoặc load shared libraries.
+
+Lợi ích:
+
+Jenkinsfile được versioned
+
+Dễ test, review, merge
+
+Tăng traceability
+
+input step không nên nằm trong node block
+
+Dễ gây blocking executor
+
+Nên dùng timeout để tránh chờ vô hạn.
+
+Shared Libraries
+
+Dùng để lưu patterns, functions chung
+
+Cho phép out-of-sandbox execution an toàn.
+
+Đặt tên function/các step riêng biệt, tránh trùng với tên built-in
+
+Ví dụ: build, stage…
+
+Tránh lỗi sandbox.RejectedAccessException.
+
+Sử dụng Pipeline Development Tools để debug pipeline.
+
+Multibranch Pipeline
+
+Dễ cộng tác multi-branch
+
+Tích hợp webhooks tự động
+
+Cho phép validate branch trước khi merge.
+
+3️⃣ Parallelism (Song song)
+
+Trong parallel block, dùng node block để gửi công việc ra executor thật.
+
+Nested parallel blocks
+
+Có thể gây quá tải executor
+
+Cần cân nhắc số executor và parallelism.
+
+Parallel Test Executor plugin
+
+Phân chia test ra “buckets”
+
+Giúp throttle parallelism, tránh quá tải.
+
+Không đặt stage trực tiếp trong parallel block
+
+Stage View và logic pipeline sẽ bị “bể”
+
+Nên chỉ đặt steps hoặc node blocks.
+
+4️⃣ Jenkinsfiles và Multibranch
+
+Sử dụng checkout scm để tự động checkout branch hiện tại.
+
+$env.BRANCH_NAME
+
+Để phân biệt behavior theo branch (VD: production vs PR branch)
+
+Thêm #!/usr/bin/env groovy ở đầu file
+
+Giúp IDE, diff GitHub highlight đúng syntax
+
+Không có nghĩa là chạy trực tiếp ./Jenkinsfile
+
+5️⃣ Groovy gotchas
+
+Không để Groovy làm blocking I/O
+
+Ví dụ: HTTPClient → gây khó khăn với resumability và whitelist trong Script Security.
+
+Không dùng Groovy thay shell script
+
+Nếu cần chạy Groovy, shell ra node:
+
+sh 'groovy foo.groovy'
+
+6️⃣ Scripted Pipeline development tips
+
+Khi phát triển mới, inline pipeline nhanh hơn là pull từ SCM.
+
+Có thể dùng load để load common utility methods từ utility pipeline.
+
+Khi xong, commit các method vào shared library hoặc Jenkinsfile SCM.
+
+Lưu ý với Multibranch pipeline:
+
+Không thể dùng inline iteration → phải develop trên branch riêng trước, rồi merge vào SCM.
